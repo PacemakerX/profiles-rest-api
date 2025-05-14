@@ -1,8 +1,12 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 
+from profiles_api import serializers
 class GenericAPIView(APIView):
     """A generic API view that can be extended for various purposes."""
+    
+    serializer_class = serializers.HelloSerializer
     
     def get(self, request, format=None):
         """Handle GET requests."""
@@ -15,6 +19,13 @@ class GenericAPIView(APIView):
         ]
         return Response({"message": "This is a generic GET response", "an_apiview": an_apiview})
 
-    def post(self, request, *args, **kwargs):
-        """Handle POST requests."""
-        return Response({"message": "This is a generic POST response", "data": request.data})
+    def post(self, request):
+        """Create POST request with our name ."""
+        
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            name = serializer.validated_data.get('name')
+            message = f"Hello {name}"
+            return Response({"message": message}, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
